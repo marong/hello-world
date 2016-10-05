@@ -1,2 +1,5 @@
 # hello-world
-Hello world
+
+I like C++ and Lua.
+
+This is a new start.
