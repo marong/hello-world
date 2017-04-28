@@ -2,11 +2,13 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 #include <stdarg.h>
 #include <errno.h>
 #include <arpa/inet.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define LISTEN_QUEUE 1024
 #define MAX_LINE 4096
@@ -24,7 +26,7 @@ void err_quit(int errnoflag, const char *fmt, ...)
 		printf("\nerrno: %d, %s", errno, strerror(errno));
 	}
 	printf("\n");
-	exit(1);
+	exit(0);
 }
 
 void str_echo(int sockfd)
@@ -45,25 +47,33 @@ again:
 	{
 		goto again;
 	}
-	else if (n < 0)
+	else if(n < 0)
 	{
 		printf("str_echo: read error");
 	}
+}
+
+void sig_child(int signo)
+{
+	pid_t pid;
+	int stat;
+
+	while ((pid = waitpid(-1, &stat, WNOHANG)) > 0)
+	{
+		printf("child %d terminated\n", pid);
+	}
+	return;
 }
 
 int main(int argc, char **argv)
 {
 	int listenfd, connfd;
 	pid_t childpid;
-	char buff[MAX_LINE];
-	struct sockaddr_in servaddr, cliaddr;
 	socklen_t clilen;
+	char buff[MAX_LINE];
+	struct sockaddr_in cliaddr, servaddr;
 
 	listenfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (listenfd < 0)
-	{
-		err_quit(0, "socket error\n");
-	}
 
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
@@ -80,12 +90,18 @@ int main(int argc, char **argv)
 		err_quit(1, "socket listen error\n");
 	}
 	
+	signal(SIGCHLD, sig_child);	// must call waitpid()
+
 	for ( ; ; )
 	{
 		clilen = sizeof(cliaddr);
-		connfd = accept(listenfd, (struct sockaddr*)&cliaddr, &clilen);
+		connfd = accept(listenfd, (struct sockaddr *)&cliaddr, &clilen);
 		if (connfd < 0)
 		{
+			if(errno == EINTR)
+			{
+				continue;
+			}
 			err_quit(1, "socket accept error\n");
 		}
 
@@ -94,7 +110,7 @@ int main(int argc, char **argv)
 			ntohs(cliaddr.sin_port));
 
 		childpid = fork();
-		if (childpid == 0)	// child process
+		if (childpid == 0)
 		{
 			if (close(listenfd) == -1)
 			{
@@ -110,3 +126,5 @@ int main(int argc, char **argv)
 		}
 	}
 }
+
+
