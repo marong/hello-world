@@ -28,7 +28,7 @@ int main()
 	}
 	else
 	{
-		printf("sizeof(short) = %d\n", sizeof(short));
+		printf("sizeof(short) = %lu\n", sizeof(short));
 	}
 
 	exit(0);
