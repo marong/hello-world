@@ -34,22 +34,20 @@ void str_echo(int sockfd)
 	ssize_t n;
 	char buff[MAX_LINE];
 
-again:
-	while ((n = read(sockfd, buff, MAX_LINE)) > 0)
+	while ((n = read(sockfd, buff, MAX_LINE)) != 0)
 	{
-		if (write(sockfd, buff, n) != n)
+		if (n > 0)
 		{
-			err_quit(1, "write error");
+			if (write(sockfd, buff, n) != n)
+			{
+				err_quit(1, "write error");
+			}
 		}
-	}
-
-	if (n < 0 && errno == EINTR)
-	{
-		goto again;
-	}
-	else if(n < 0)
-	{
-		printf("str_echo: read error");
+		else if (errno != EINTR)
+		{
+			printf("str_echo: read error\n");
+			break;
+		}
 	}
 }
 
