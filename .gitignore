@@ -7,3 +7,7 @@
 !*.cpp
 !*.md
 !*.txt
+
+#
+!/select/.c
+!/select/.h
