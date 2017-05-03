@@ -9,5 +9,9 @@
 !*.txt
 
 #
-!/select/.c
-!/select/.h
+!/select/*.c
+!/select/*.h
+
+#
+!/sockopt/*.c
+!/sockopt/*.h
