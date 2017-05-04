@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 	ssize_t		n;
 	socklen_t	len;
 	char		buf[MAX_LINE];
-	char		tmp[MAX_LINE];
+	char		straddr[MAX_LINE];
 
 	for ( ; ; )
 	{
@@ -59,10 +59,10 @@ int main(int argc, char **argv)
 		{
 			err_quit(1, "socket recvfrom error");
 		}
-// todo: 没有循环时可以打印一次，有 from 循环时不打印？
-//		printf("recvform : %s, %d",
-//			inet_ntop(AF_INET, &cliaddr.sin_addr, tmp, sizeof(tmp)),
-//			ntohs(cliaddr.sin_port));
+
+		printf("recvfrom: %s, %d\n",
+			inet_ntop(AF_INET, &cliaddr.sin_addr, straddr, sizeof(straddr)),
+			ntohs(cliaddr.sin_port));
 
 		if (sendto(sockfd, buf, n, 0, (struct sockaddr *)&cliaddr, len) != n)
 		{
