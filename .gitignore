@@ -1,17 +1,3 @@
 # 忽略全部
-*
+/bin
 
-# 不忽略的文件
-!*.c
-!*.h
-!*.cpp
-!*.md
-!*.txt
-
-#
-!/select/*.c
-!/select/*.h
-
-#
-!/sockopt/*.c
-!/sockopt/*.h
