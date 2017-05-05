@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -34,7 +33,7 @@ int main(int argc, char **argv)
 	}
 
 	int					sockfd;
-	struct sockaddr_in	servaddr;
+	struct sockaddr_in	servaddr, replyaddr;
 
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sockfd < 0)
@@ -48,7 +47,9 @@ int main(int argc, char **argv)
 	servaddr.sin_port 			= htons(SERVER_PORT);
 
 	ssize_t		n;
+	socklen_t	len;
 	char		sendline[MAX_LINE], recvline[MAX_LINE + 1];
+	char		straddr[128];
 	while (fgets(sendline, MAX_LINE, stdin) != NULL)
 	{
 		n = strlen(sendline);
@@ -57,11 +58,22 @@ int main(int argc, char **argv)
 			err_quit(1, "socket sendto error");
 		}
 
-		n = recvfrom(sockfd, recvline, MAX_LINE, 0, NULL, NULL);
+		len = sizeof(replyaddr);
+		n = recvfrom(sockfd, recvline, MAX_LINE, 0, (struct sockaddr *)&replyaddr, &len);
 		if (n < 0)
 		{
 			err_quit(1, "socket recvform error");
 		}
+
+		if (len != sizeof(servaddr) || memcmp(&servaddr, &replyaddr, len) != 0)
+		{
+			printf(" len sizeof(servaddr) memcmp %u, %u, %d\n", len, sizeof(servaddr), memcmp(&servaddr,&replyaddr,len));
+			printf("reply from %s %d (ignored)\n", 
+				inet_ntop(AF_INET, &replyaddr.sin_addr, straddr, sizeof(straddr)),
+				ntohs(replyaddr.sin_port));
+			continue;
+		}
+
 		recvline[n] = 0;
 		fputs(recvline, stdout);
 	}
